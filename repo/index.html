@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dokumentacja</title>
+
+  <script src="https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js"></script>
+
+  <style>
+    :root { --bg:#0b1220; --card:#111a2e; --muted:#a9b4d0; --line:#24314f; --accent:#1d3cff; }
+    * { box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg, #0b1220, #070b14);
+      color:#e8eefc;
+    }
+    .wrap{ max-width:1100px; margin: 20px auto; padding: 0 16px; }
+    .card{
+      background: rgba(17,26,46,.9);
+      border: 1px solid rgba(36,49,79,.6);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+    header{
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(36,49,79,.6);
+      display:flex;
+      gap:12px;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+    header h1{ margin:0; font-size:18px; }
+    header .status{ margin-left:auto; color: var(--muted); font-size: 13px; }
+
+    nav{
+      display:flex;
+      gap:10px;
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(36,49,79,.45);
+      flex-wrap: wrap;
+      background: rgba(9,13,25,.25);
+    }
+    .tab{
+      border: 1px solid rgba(36,49,79,.75);
+      background: rgba(9,13,25,.35);
+      color:#e8eefc;
+      padding: 10px 12px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-weight: 650;
+      font-size: 13px;
+      user-select:none;
+    }
+    .tab.active{
+      background: rgba(29,60,255,.20);
+      border-color: rgba(29,60,255,.55);
+    }
+
+    .content{
+      padding: 16px;
+      background: rgba(9,13,25,.35);
+    }
+
+    /* DOCX render */
+    .docx{
+      background:#fff;
+      color:#111;
+      border-radius: 12px;
+      padding: 28px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+      min-height: 50vh;
+    }
+    .docx img { max-width: 100%; height: auto; }
+    .docx table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    .docx th, .docx td { border: 1px solid #ddd; padding: 8px; vertical-align: top; }
+
+    /* Single image / diagram */
+    .media{
+      background:#fff;
+      border-radius: 12px;
+      padding: 14px;
+      min-height: 50vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:auto;
+    }
+    .media img{
+      max-width: 100%;
+      height: auto;
+      display:block;
+    }
+
+    /* Gallery (Use case) */
+    .gallery{
+      display: grid;
+      gap: 14px;
+    }
+    .gcard{
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      overflow: auto;
+      border: 1px solid #e9e9e9;
+    }
+    .gtitle{
+      color:#111;
+      font-weight: 800;
+      font-size: 13px;
+      margin: 0 0 10px;
+      display:flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+    }
+    .gtitle span{
+      font-weight: 600;
+      color:#666;
+      font-size: 12px;
+    }
+    .gcard img{
+      max-width: 100%;
+      height: auto;
+      display:block;
+    }
+
+    .hint{ color: var(--muted); font-size: 13px; padding: 0 18px 18px; }
+    .error{ color:#ffb4b4; }
+    code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <h1 id="pageTitle">Dod</h1>
+        <div id="status" class="status">Ładowanie…</div>
+      </header>
+
+      <nav id="nav">
+        <button class="tab active" data-key="Dod">Dod</button>
+        <button class="tab" data-key="Activiteit diagraam">Activiteit diagraam</button>
+        <button class="tab" data-key="Use case">Use case</button>
+        <button class="tab" data-key="User stories">User stories</button>
+        <button class="tab" data-key="Norma">Norma</button>
+        <button class="tab" data-key="Realiseren">Realiseren</button>
+        <button class="tab" data-key="Testen">Testen</button>
+        <button class="tab" data-key="Verbeteren">Verbeteren</button>
+      </nav>
+
+      <div class="content">
+        <div id="output" class="docx">Ładowanie…</div>
+      </div>
+
+      <div class="hint">
+        Pliki SVG trzymaj w <code>assets/</code>.  
+        Use case wyświetla: <code>Visio Use_Case.svg</code> → <code>Visio Use_Case5.svg</code>.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Konfiguracja: sekcja -> typ + pliki
+    const CONTENT = {
+      "Dod": { type: "docx", file: "TemplateDefinitionOfDone.docx" },
+
+      "Activiteit diagraam": { type: "image", file: "activiteit-diagram.svg" },
+
+      "Use case": {
+        type: "gallery",
+        files: [
+          "Visio Use_Case.svg",
+          "Visio Use_Case1.svg",
+          "Visio Use_Case2.svg",
+          "Visio Use_Case3.svg",
+          "Visio Use_Case4.svg",
+          "Visio Use_Case5.svg"
+        ]
+      },
+
+      "User stories": { type: "docx", file: null },
+      "Norma": { type: "docx", file: null },
+      "Realiseren": { type: "docx", file: null },
+      "Testen": { type: "docx", file: null },
+      "Verbeteren": { type: "docx", file: null }
+    };
+
+    const nav = document.getElementById("nav");
+    const out = document.getElementById("output");
+    const statusEl = document.getElementById("status");
+    const pageTitle = document.getElementById("pageTitle");
+
+    function setActiveTab(key) {
+      [...nav.querySelectorAll(".tab")].forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.key === key);
+      });
+    }
+
+    function absUrl(rel) {
+      return new URL(rel, window.location.href).toString();
+    }
+
+    async function headOk(url) {
+      const r = await fetch(url, { method: "HEAD", cache: "no-store" });
+      return r.ok;
+    }
+
+    function showError(html) {
+      statusEl.innerHTML = `<span class="error">Błąd</span>`;
+      out.className = "docx";
+      out.innerHTML = html;
+    }
+
+    async function loadDocx(filename) {
+      const url = absUrl(`./docs/${filename}`);
+      statusEl.textContent = "Pobieranie DOCX…";
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`DOCX HTTP ${res.status}`);
+
+      statusEl.textContent = "Konwersja do HTML…";
+      const arrayBuffer = await res.arrayBuffer();
+      const result = await mammoth.convertToHtml({ arrayBuffer });
+
+      out.className = "docx";
+      out.innerHTML = result.value || "<p>(Brak treści)</p>";
+      statusEl.textContent = "Gotowe.";
+    }
+
+    async function loadImage(filename) {
+      const url = absUrl(`./assets/${filename}`);
+      statusEl.textContent = "Ładowanie diagramu…";
+
+      out.className = "media";
+      out.innerHTML = `<img src="${url}" alt="Diagram: ${filename}">`;
+
+      const ok = await headOk(url);
+      if (!ok) throw new Error(`IMAGE missing: assets/${filename}`);
+
+      statusEl.textContent = "Gotowe.";
+    }
+
+    async function loadGallery(files) {
+      out.className = "gallery";
+      out.innerHTML = "";
+
+      statusEl.textContent = "Ładowanie diagramów…";
+
+      // tworzymy karty od razu (szybciej wizualnie), a brakujące oznaczamy
+      files.forEach((fn, i) => {
+        const url = absUrl(`./assets/${fn}`);
+
+        const card = document.createElement("div");
+        card.className = "gcard";
+
+        const title = document.createElement("div");
+        title.className = "gtitle";
+        title.innerHTML = `<div>${fn}</div><span>#${i}</span>`;
+
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = `Use case: ${fn}`;
+
+        const note = document.createElement("div");
+        note.style.color = "#c00";
+        note.style.fontSize = "12px";
+        note.style.marginTop = "8px";
+        note.style.display = "none";
+        note.textContent = "Nie znaleziono pliku (sprawdź nazwę i folder assets/).";
+
+        img.addEventListener("error", () => {
+          note.style.display = "block";
+        });
+
+        card.appendChild(title);
+        card.appendChild(img);
+        card.appendChild(note);
+        out.appendChild(card);
+      });
+
+      // opcjonalnie: szybka kontrola czy wszystko istnieje (HEAD)
+      let missing = 0;
+      for (const fn of files) {
+        const url = absUrl(`./assets/${fn}`);
+        const ok = await headOk(url);
+        if (!ok) missing++;
+      }
+
+      statusEl.textContent = missing ? `Gotowe (brakujące: ${missing}).` : "Gotowe.";
+    }
+
+    async function loadForKey(key) {
+      pageTitle.textContent = key;
+      setActiveTab(key);
+
+      const cfg = CONTENT[key];
+      if (!cfg) return;
+
+      try {
+        if (cfg.type === "docx") {
+          if (!cfg.file) {
+            return showError(`
+              <h2>${key}</h2>
+              <p>Nie podpięto jeszcze pliku DOCX dla tej sekcji.</p>
+              <p>Dodaj DOCX do <code>docs/</code> i ustaw <code>file</code> w konfiguracji.</p>
+            `);
+          }
+          await loadDocx(cfg.file);
+        }
+
+        if (cfg.type === "image") {
+          if (!cfg.file) {
+            return showError(`
+              <h2>${key}</h2>
+              <p>Nie podpięto jeszcze pliku SVG/PNG dla tej sekcji.</p>
+              <p>Dodaj plik do <code>assets/</code> i ustaw <code>file</code> w konfiguracji.</p>
+            `);
+          }
+          await loadImage(cfg.file);
+        }
+
+        if (cfg.type === "gallery") {
+          if (!cfg.files?.length) {
+            return showError(`
+              <h2>${key}</h2>
+              <p>Brak listy plików do wyświetlenia.</p>
+            `);
+          }
+          await loadGallery(cfg.files);
+        }
+      } catch (err) {
+        console.error(err);
+        showError(`
+          <p class="error"><b>Nie udało się wczytać.</b></p>
+          <p class="hint">Szczegóły: ${String(err)}</p>
+          <p class="hint">GitHub Pages jest wrażliwy na wielkość liter i spacje w nazwach.</p>
+        `);
+      }
+    }
+
+    nav.addEventListener("click", (e) => {
+      const btn = e.target.closest(".tab");
+      if (!btn) return;
+      loadForKey(btn.dataset.key);
+    });
+
+    loadForKey("Dod");
+  </script>
+</body>
+</html>
